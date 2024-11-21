@@ -5,12 +5,15 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Server implements Runnable{
 
     private ArrayList<ConnectionHandler> connections;
     private ServerSocket server;
     private boolean done;
+    private ExecutorService pool;
     public Server(){
         connections = new ArrayList<>();
         done = false;
@@ -19,15 +22,16 @@ public class Server implements Runnable{
     public void run() {
         try {
             server = new ServerSocket(9999);
-
+            pool = Executors.newCachedThreadPool();
             while (!done){
                 Socket client = server.accept();
                 ConnectionHandler handler = new ConnectionHandler(client);
                 connections.add(handler);
+                pool.execute(handler);
             }
 
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             shutdown();
         }
     }
@@ -118,4 +122,8 @@ public class Server implements Runnable{
         }
     }
 
+    public static void main(String[] args) {
+        Server server = new Server();
+        server.run();
+    }
 }
